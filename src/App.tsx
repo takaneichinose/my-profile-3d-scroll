@@ -1,11 +1,7 @@
-import './App.css';
+import { MyProfile } from '@/features/myProfile';
 
 function App() {
-  return (
-    <>
-      TEST
-    </>
-  )
+  return <MyProfile />;
 }
 
 export default App;
