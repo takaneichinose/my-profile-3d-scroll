@@ -1,10 +1,10 @@
 import { DirectionalLightShadow, PCFShadowMap, Vector2, Vector3 } from 'three';
 
 export const cameraSettings = {
-  fov: 75,
+  fov: 45,
   near: 0.1,
   far: 10,
-  position: new Vector3(0, 0, 1),
+  position: new Vector3(0, 0, 0.85),
 };
 
 export const rendererSettings = {
@@ -18,13 +18,13 @@ export const rendererSettings = {
 
 export const ambientLightSettings = {
   color: 0xffffff,
-  intensity: 0.5,
+  intensity: 1,
 };
 
 export const directionalLightSettings = {
   color: 0xffffff,
   intensity: 1,
-  position: new Vector3(5, 8, 5),
+  position: new Vector3(0, 8, 5),
   castShadow: true,
   shadow: {
     bias: -0.004,

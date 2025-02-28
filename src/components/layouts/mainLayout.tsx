@@ -5,5 +5,9 @@ type props = {
 };
 
 export function MainLayout({ children }: props) {
-  return <div className="flex flex-col sm:flex-row">{children}</div>;
+  return (
+    <div className="flex flex-col sm:items-baseline sm:flex-row">
+      {children}
+    </div>
+  );
 }

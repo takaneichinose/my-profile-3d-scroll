@@ -12,7 +12,7 @@ type props = {
 
 export function ScreenCanvas({ children }: props) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const { renderer, screenWidth, screenHeight, setRenderer } =
+  const { camera, renderer, screenWidth, screenHeight, setRenderer } =
     useContext(ThreeContext);
 
   useEffect(() => {
@@ -33,12 +33,20 @@ export function ScreenCanvas({ children }: props) {
   }, [setRenderer]);
 
   useEffect(() => {
-    if (renderer == null || screenWidth == null || screenHeight == null) {
+    if (
+      camera == null ||
+      renderer == null ||
+      screenWidth == null ||
+      screenHeight == null
+    ) {
       return;
     }
 
+    camera.aspect = screenWidth / screenHeight;
+    camera.updateProjectionMatrix();
+
     renderer.setSize(screenWidth, screenHeight);
-  }, [renderer, screenWidth, screenHeight]);
+  }, [camera, renderer, screenWidth, screenHeight]);
 
   return !WebGL.isWebGL2Available() ? (
     <ScreenFallback />

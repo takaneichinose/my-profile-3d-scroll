@@ -12,11 +12,8 @@ export function ScreenLayout({ children }: props) {
   const ref = useRef<HTMLDivElement>(null);
   const {
     camera,
-    clock,
     scene,
     renderer,
-    // DELETEME
-    orbitControls,
     setCamera,
     setScreenHeight,
     setScreenWidth,
@@ -65,24 +62,12 @@ export function ScreenLayout({ children }: props) {
   const update = useCallback(() => {
     requestAnimationFrame(update);
 
-    if (
-      clock == null ||
-      renderer == null ||
-      scene == null ||
-      camera == null ||
-      // DELETEME
-      orbitControls == null
-    ) {
+    if (renderer == null || scene == null || camera == null) {
       return;
     }
 
-    // const delta: number = clock.getDelta();
-
     renderer.render(scene, camera);
-
-    // DELETEME
-    orbitControls.update();
-  }, [camera, clock, orbitControls, renderer, scene]);
+  }, [camera, renderer, scene]);
 
   useEffect(() => {
     update();

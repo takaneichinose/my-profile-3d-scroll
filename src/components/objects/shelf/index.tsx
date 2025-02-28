@@ -10,7 +10,7 @@ type props = {
   rotation?: Vector3;
 };
 
-export function Room({ position, rotation }: props) {
+export function Shelf({ position, rotation }: props) {
   const { scene } = useContext(ThreeContext);
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export function Room({ position, rotation }: props) {
     }
 
     (async () => {
-      const model = await loadModel(`${modelsPath}/Room.glb`);
+      const model = await loadModel(`${modelsPath}/Shelf.glb`);
 
       model.scene.position.x = position?.x ?? 0;
       model.scene.position.y = position?.y ?? 0;
