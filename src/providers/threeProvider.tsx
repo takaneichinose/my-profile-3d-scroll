@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Camera, Clock, Scene, WebGLRenderer } from 'three';
+import { Clock, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
 import { ThreeContext } from '@/contexts/threeContext';
@@ -10,7 +10,7 @@ type props = {
 
 export function ThreeProvider({ children }: props) {
   const [scene, setScene] = useState<Scene>();
-  const [camera, setCamera] = useState<Camera>();
+  const [camera, setCamera] = useState<PerspectiveCamera>();
   const [clock, setClock] = useState<Clock>();
   const [renderer, setRenderer] = useState<WebGLRenderer>();
   const [screenWidth, setScreenWidth] = useState<number>();
