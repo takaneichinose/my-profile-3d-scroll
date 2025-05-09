@@ -1,10 +1,16 @@
-import { DirectionalLightShadow, PCFShadowMap, Vector2, Vector3 } from 'three';
+import {
+  DirectionalLightShadow,
+  PCFShadowMap,
+  Vector2,
+  Vector3,
+  WebGLShadowMap,
+} from 'three';
 
 export const cameraSettings = {
   fov: 45,
   near: 0.1,
   far: 10,
-  position: new Vector3(0, 0, 0.85),
+  position: new Vector3(0, 0.1, 1.5),
 };
 
 export const rendererSettings = {
@@ -13,7 +19,7 @@ export const rendererSettings = {
   shadowMap: {
     enabled: true,
     type: PCFShadowMap,
-  },
+  } as WebGLShadowMap,
 };
 
 export const ambientLightSettings = {
@@ -24,10 +30,10 @@ export const ambientLightSettings = {
 export const directionalLightSettings = {
   color: 0xffffff,
   intensity: 1,
-  position: new Vector3(0, 8, 5),
+  position: new Vector3(-0.5, 2, 1),
   castShadow: true,
   shadow: {
-    bias: -0.004,
+    bias: -0.05,
     mapSize: new Vector2(1024, 1024),
     camera: {
       near: 0.1,

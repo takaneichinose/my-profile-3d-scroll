@@ -44,7 +44,10 @@ function DirectionalLightNode({
     }
 
     if (shadow != null) {
-      object.shadow = shadow;
+      object.shadow.bias = shadow.bias;
+      object.shadow.camera.near = shadow.camera.near;
+      object.shadow.camera.far = shadow.camera.far;
+      object.shadow.mapSize = shadow.mapSize;
     }
 
     if (target != null) {

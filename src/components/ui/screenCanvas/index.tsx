@@ -21,15 +21,18 @@ export function ScreenCanvas({ children }: props) {
     }
 
     const canvas = ref.current;
-    const { antialias, alpha } = rendererSettings;
+    const { antialias, alpha, shadowMap } = rendererSettings;
 
-    setRenderer(
-      new WebGLRenderer({
-        canvas,
-        antialias,
-        alpha,
-      }),
-    );
+    const renderer = new WebGLRenderer({
+      canvas,
+      antialias,
+      alpha,
+    });
+
+    setRenderer(renderer);
+
+    renderer.shadowMap.enabled = shadowMap.enabled;
+    renderer.shadowMap.type = shadowMap.type;
   }, [setRenderer]);
 
   useEffect(() => {

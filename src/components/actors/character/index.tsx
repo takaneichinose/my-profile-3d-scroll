@@ -1,17 +1,22 @@
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { AnimationClip, AnimationMixer } from 'three';
 import { GLTF } from 'three/examples/jsm/Addons.js';
 import { degToRad } from 'three/src/math/MathUtils.js';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-import { modelsPath } from '@/constants/models';
-import { cameraSettings } from '@/constants/settings';
-import { ThreeContext } from '@/contexts/threeContext';
-import { loadModel } from '@/utils/modelUtil';
 import {
   animateSpeedStep1,
   animateSpeedStep2,
-  animateStep1,
   animations,
+  cameraRotateY,
+  cameraStep5X,
+  cameraStep5Y,
+  cameraStep5Z,
+  cameraStep6X,
+  cameraStep6Y,
+  cameraStep6Z,
+  positionInitialY,
   rotateInitial,
   rotateStep2,
   scrollStep1End,
@@ -24,22 +29,38 @@ import {
   scrollStep4Start,
   scrollStep5End,
   scrollStep5Start,
+  scrollStep6End,
+  scrollStep6Start,
+  scrollStep7End,
+  scrollStep7Start,
   walkInitialX,
   walkInitialZ,
   walkStep1,
   walkStep3,
   walkStep4,
 } from '@/constants/character';
+import { modelsPath } from '@/constants/models';
+import { cameraSettings } from '@/constants/settings';
+import { ThreeContext } from '@/contexts/threeContext';
+import { loadModel } from '@/utils/modelUtil';
+
+gsap.registerPlugin(ScrollTrigger);
+
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: document.body,
+    start: 'top top',
+    end: `+=${scrollStep7End * window.innerHeight}`,
+    scrub: true,
+  },
+  repeat: 0,
+});
 
 export function Character() {
   const cameraPosition = cameraSettings.position;
 
-  const [characterPositionX, setCharacterPositionX] = useState(walkInitialX);
-  const [characterPositionZ, setCharacterPositionZ] = useState(walkInitialZ);
-  const [characterRotationY, setCharacterRotationY] = useState(rotateInitial);
-  const [cameraPositionX, setCameraPositionX] = useState(cameraPosition.x);
-  const [cameraPositionZ, setCameraPositionZ] = useState(cameraPosition.z);
   const [scrollY, setScrollY] = useState(0);
+  const [screenHeight, setScreenHeight] = useState(0);
   const [model, setModel] = useState<GLTF>();
   const [clips, setClips] = useState<AnimationClip[]>();
   const [mixer, setMixer] = useState<AnimationMixer>();
@@ -49,18 +70,47 @@ export function Character() {
 
   const handleScroll = (evt: Event) => {
     const elm = evt.currentTarget as Window;
+    const scrollY = elm.scrollY;
 
-    setScrollY(elm.scrollY);
+    setScrollY(scrollY);
   };
 
+  const handleResize = () => {
+    setScreenHeight(window.innerHeight);
+  };
+
+  const getClipName = useCallback(() => {
+    const step3End = scrollStep3End * screenHeight;
+    const step4Start = scrollStep4Start * screenHeight;
+    const step4End = scrollStep4End * screenHeight;
+    const step5Start = scrollStep5Start * screenHeight;
+    const step5End = scrollStep5End * screenHeight;
+
+    if (scrollY >= 0 && scrollY <= step3End) {
+      return animations.walk;
+    } else if (scrollY >= step4Start && scrollY <= step4End) {
+      return animations.stand;
+    } else if (scrollY >= step5Start && scrollY <= step5End) {
+      return animations.jumpAndSit;
+    }
+
+    return null;
+  }, [scrollY, screenHeight]);
+
+  // Initialize the scroll event
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+
+    setScreenHeight(window.innerHeight);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
+  // Load the model of the character
   useEffect(() => {
     if (scene == null) {
       return;
@@ -77,104 +127,200 @@ export function Character() {
 
       scene.add(character);
 
-      character.position.y = -0.6;
-      character.rotation.x = 0;
-      character.rotation.z = 0;
+      character.castShadow = true;
+      character.receiveShadow = true;
     })();
   }, [scene]);
 
+  // Set the animation of the character
   useEffect(() => {
-    if (model == null || clips == null || mixer == null || scrollY == null) {
+    const clipName = getClipName();
+
+    if (
+      clipName == null ||
+      clips == null ||
+      mixer == null ||
+      scrollY == null ||
+      screenHeight === 0
+    ) {
       return;
     }
 
-    let clipName = null;
+    const clip = AnimationClip.findByName(clips, clipName);
+    const action = mixer.clipAction(clip);
 
-    if (scrollY >= 0 && scrollY <= animateStep1) {
-      clipName = animations.walk;
-    } else if (scrollY >= scrollStep4Start && scrollY <= scrollStep4End) {
-      clipName = animations.stand;
-    } else if (scrollY >= scrollStep5Start && scrollY <= scrollStep5End) {
-      clipName = animations.jumpAndSit;
+    if (clipName === animations.walk) {
+      mixer.setTime(scrollY / (animateSpeedStep1 * screenHeight));
+    } else if (clipName === animations.stand) {
+      mixer.setTime(0);
+    } else if (clipName === animations.jumpAndSit) {
+      const stepStart = scrollY - scrollStep5Start * screenHeight;
+
+      mixer.setTime(stepStart / (animateSpeedStep2 * screenHeight));
     }
 
-    if (clipName != null) {
-      const clip = AnimationClip.findByName(clips, clipName);
-      const action = mixer.clipAction(clip);
+    setCurrentClipName(clipName);
 
-      if (clipName === animations.walk) {
-        mixer.setTime(scrollY / animateSpeedStep1);
-      } else if (clipName === animations.stand) {
-        mixer.setTime(0);
-      } else if (clipName === animations.jumpAndSit) {
-        mixer.setTime(scrollY / animateSpeedStep2);
-      }
+    action.play();
+  }, [getClipName, clips, mixer, screenHeight, scrollY]);
 
-      setCurrentClipName(clipName);
-
-      action.play();
-    }
-
-    if (scrollY === scrollStep1Start) {
-      setCharacterPositionX(walkInitialX);
-      setCharacterPositionZ(walkInitialZ);
-      setCameraPositionX(cameraPosition.x);
-      setCameraPositionZ(cameraPosition.z);
-    }
-
-    if (scrollY >= scrollStep1Start && scrollY <= scrollStep1End) {
-      const percentage = scrollY / scrollStep1End;
-
-      setCharacterPositionZ(walkInitialZ + walkStep1 * percentage);
-      setCameraPositionZ(cameraPosition.z + walkStep1 * percentage);
-
-      setCharacterRotationY(rotateInitial);
-      setCameraPositionX(cameraPosition.x);
-    }
-
-    if (scrollY >= scrollStep2Start && scrollY <= scrollStep2End) {
-      const percentage =
-        (scrollY - scrollStep2Start) / (scrollStep2End - scrollStep2Start);
-
-      setCharacterPositionX(walkInitialX);
-      setCameraPositionX(cameraPosition.x);
-
-      setCharacterRotationY(rotateInitial + rotateStep2 * percentage);
-    }
-
-    if (scrollY >= scrollStep3Start && scrollY <= scrollStep3End) {
-      const percentage =
-        (scrollY - scrollStep3Start) / (scrollStep3End - scrollStep3Start);
-
-      // TODO: Something is wrong with this animation
-
-      setCharacterPositionX(walkInitialX + walkStep3 * percentage);
-      setCameraPositionX(cameraPosition.x + walkStep3 * percentage);
-    }
-
-    if (scrollY >= scrollStep5Start && scrollY <= scrollStep5End) {
-      const percentage =
-        (scrollY - scrollStep5Start) / (scrollStep5End - scrollStep5Start);
-
-      setCharacterPositionX(walkStep3 + walkStep4 * percentage);
-      setCameraPositionX(walkStep3 + walkStep4 * percentage);
-
-      // TODO: Rotate camera in front of the character
-    }
-
-    // TODO: Condition after scroll step 5, put the "end" animation time to static
-  }, [model, clips, mixer, scrollY, cameraPosition]);
-
+  // Animate and move the character to another position
   useEffect(() => {
-    if (model == null) {
+    if (model == null || camera == null || screenHeight === 0) {
       return;
     }
 
-    model.scene.position.x = characterPositionX;
-    model.scene.position.z = characterPositionZ;
-    model.scene.rotation.y = degToRad(characterRotationY);
-  }, [model, characterPositionX, characterPositionZ, characterRotationY]);
+    const character = model.scene;
 
+    tl.fromTo(
+      character.position,
+      {
+        z: walkInitialZ,
+      },
+      {
+        x: walkInitialX,
+        z: walkInitialZ + walkStep1,
+        duration: scrollStep1End * screenHeight,
+      },
+      scrollStep1Start * screenHeight,
+    )
+      .fromTo(
+        camera.position,
+        {
+          y: cameraPosition.y,
+          z: cameraPosition.z,
+        },
+        {
+          x: cameraPosition.x,
+          z: cameraPosition.z + walkStep1,
+          duration: scrollStep1End * screenHeight,
+        },
+        scrollStep1Start * screenHeight,
+      )
+      .fromTo(
+        character.rotation,
+        {
+          y: degToRad(rotateInitial),
+        },
+        {
+          y: degToRad(rotateInitial) + degToRad(rotateStep2),
+          duration: (scrollStep2End - scrollStep2Start) * screenHeight,
+          ease: 'power2.out',
+        },
+        scrollStep2Start * screenHeight,
+      )
+      .fromTo(
+        character.position,
+        {
+          x: walkInitialX,
+        },
+        {
+          x: walkInitialX + walkStep3,
+          duration: (scrollStep3End - scrollStep3Start) * screenHeight,
+        },
+        scrollStep3Start * screenHeight,
+      )
+      .fromTo(
+        camera.position,
+        {
+          x: cameraPosition.x,
+        },
+        {
+          x: cameraPosition.x + walkStep3,
+          duration: (scrollStep3End - scrollStep3Start) * screenHeight,
+        },
+        scrollStep3Start * screenHeight,
+      )
+      .fromTo(
+        character.position,
+        {
+          x: walkInitialX + walkStep3,
+        },
+        {
+          x: walkInitialX + walkStep3 + walkStep4,
+          duration: (scrollStep5End - scrollStep5Start) * screenHeight,
+        },
+        scrollStep5Start * screenHeight,
+      )
+      .fromTo(
+        camera.position,
+        {
+          x: cameraPosition.x + walkStep3,
+        },
+        {
+          x: cameraPosition.x + walkStep3 + walkStep4,
+          duration: (scrollStep5End - scrollStep5Start) * screenHeight,
+        },
+        scrollStep5Start * screenHeight,
+      )
+      .fromTo(
+        camera.position,
+        {
+          x: cameraPosition.x + walkStep3 + walkStep4,
+          y: cameraPosition.y,
+          z: cameraPosition.z + walkStep1,
+        },
+        {
+          x: cameraPosition.x + cameraStep5X,
+          y: cameraPosition.y + cameraStep5Y,
+          z: cameraPosition.z + cameraStep5Z,
+          ease: 'power4.out',
+          duration: (scrollStep6End - scrollStep6Start) * screenHeight,
+        },
+        scrollStep6Start * screenHeight,
+      )
+      .fromTo(
+        camera.position,
+        {
+          x: cameraPosition.x + cameraStep5X,
+          y: cameraPosition.y + cameraStep5Y,
+          z: cameraPosition.z + cameraStep5Z,
+        },
+        {
+          x: cameraPosition.x + cameraStep6X,
+          y: cameraPosition.y + cameraStep6Y,
+          z: cameraPosition.z + cameraStep6Z,
+          ease: 'power4.inOut',
+          duration: (scrollStep7End - scrollStep7Start) * screenHeight,
+        },
+        scrollStep7Start * screenHeight,
+      )
+      .fromTo(
+        camera.rotation,
+        {
+          y: 0,
+        },
+        {
+          y: degToRad(cameraRotateY),
+          ease: 'power4.inOut',
+          duration: (scrollStep7End - scrollStep7Start) * screenHeight,
+        },
+        scrollStep7Start * screenHeight,
+      );
+  }, [model, camera, cameraPosition, screenHeight]);
+
+  // Initialize the position of the character
+  useEffect(() => {
+    if (model == null || camera == null) {
+      return;
+    }
+
+    const character = model.scene;
+
+    character.position.x = walkInitialX;
+    character.position.y = positionInitialY;
+    character.position.z = walkInitialZ;
+
+    character.rotation.x = 0;
+    character.rotation.y = degToRad(rotateInitial);
+    character.rotation.z = 0;
+
+    camera.position.x = cameraPosition.x;
+    camera.position.y = cameraPosition.y;
+    camera.position.z = cameraPosition.z;
+  }, [model, camera, cameraPosition]);
+
+  // Stop the current animation before starting to another
   useEffect(() => {
     if (clips == null || mixer == null || currentClipName == null) {
       return;
@@ -189,11 +335,6 @@ export function Character() {
       action.stop();
     }
   }, [clips, mixer, currentClipName]);
-
-  if (camera != null) {
-    camera.position.setX(cameraPositionX);
-    camera.position.setZ(cameraPositionZ);
-  }
 
   return <></>;
 }

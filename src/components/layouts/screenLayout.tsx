@@ -74,10 +74,7 @@ export function ScreenLayout({ children }: props) {
   }, [update]);
 
   return (
-    <div
-      ref={ref}
-      className="w-full shrink-0 aspect-4/3 sm:w-xs md:w-md lg:w-lg xl:w-2xl sm:order-2 sm:sticky sm:top-0"
-    >
+    <div ref={ref} className="bg-black w-dvw h-dvh shrink-0 fixed top-0">
       {children}
     </div>
   );
