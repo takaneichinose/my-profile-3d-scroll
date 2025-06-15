@@ -6,7 +6,6 @@ export function Content() {
   return (
     <div className="w-full relative">
       <Content1 />
-      <div className="h-dvh">{/* SPACER */}</div>
       <Content2 />
       <div className="h-dvh">{/* SPACER */}</div>
       <div className="h-dvh">{/* SPACER */}</div>
