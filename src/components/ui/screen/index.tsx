@@ -3,12 +3,12 @@ import useErrorBoundary from 'use-error-boundary';
 
 import { Character } from '@/components/actors/character';
 import { AmbientLight } from '@/components/three/ambientLight';
-import { DirectionalLight } from '@/components/three/directionalLight';
+// import { DirectionalLight } from '@/components/three/directionalLight';
 import { ScreenLayout } from '@/components/layouts/screenLayout';
 import { Room } from '@/components/objects/room';
 import {
   ambientLightSettings,
-  directionalLightSettings,
+  // directionalLightSettings,
   // fogSettings,
 } from '@/constants/settings';
 // import { Fog } from '@/components/three/fog';
@@ -36,7 +36,7 @@ export function Screen() {
         <ErrorBoundary>
           <ScreenCanvas>
             <AmbientLight {...ambientLightSettings} />
-            <DirectionalLight {...directionalLightSettings} />
+            {/* <DirectionalLight {...directionalLightSettings} /> */}
             {/* <Fog {...fogSettings} /> */}
             <Room
               position={new Vector3(-2, -0.6, 0.5)}
