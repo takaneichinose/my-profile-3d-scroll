@@ -55,7 +55,12 @@ export function ScreenCanvas({ children }: props) {
     <ScreenFallback />
   ) : (
     <>
-      <canvas width={screenWidth} height={screenHeight} ref={ref} />
+      <canvas
+        width={screenWidth}
+        height={screenHeight}
+        ref={ref}
+        className="pixelated-screen"
+      />
       {children}
     </>
   );
